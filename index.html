@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0b1320" />
-<title>AGS Football Pool — Stadium Edition</title>
+<title>AGS Football Pool — Stadium Edition Admin Fix</title>
 <style>
 :root{
   --bg:#08111d;--panel:#0f1c2d;--panel2:#13243a;--text:#f6f8fb;--muted:#a9b5c6;
@@ -822,13 +822,14 @@ footer .admin-btn{background:#0b2745!important;color:#fff!important}
     <div class="card" id="adminLock">
       <div class="kicker">Pool Manager</div><h3 style="margin:7px 0 14px">Admin Access</h3>
       <div class="grid2">
-        <input id="adminCode" class="input" type="password" placeholder="Enter admin code"/>
+        <input id="adminCode" class="input" type="password" placeholder="Enter admin code" onkeydown="if(event.key==='Enter')unlockAdmin()"/>
         <button class="primary" onclick="unlockAdmin()">Unlock Admin</button>
       </div>
-      <p class="small">Admin code: <b>239367SG</b>. Change it before public deployment.</p>
+      <p class="small">Private pool-manager access.</p>
     </div>
 
     <div id="adminPanel" class="admin-only">
+      <div class="section-jump" style="justify-content:flex-end"><button class="secondary" onclick="lockAdmin()">🔒 Lock Admin</button></div>
       <div class="card">
         <div class="weekbar"><div><div class="kicker">Weekly Setup Assistant</div><h3>What needs attention?</h3></div><span id="readyPill" class="pill">Checking…</span></div>
         <div id="weeklyChecklist" class="checklist" style="margin-top:14px"></div>
@@ -929,6 +930,7 @@ footer .admin-btn{background:#0b2745!important;color:#fff!important}
 
 <script>
 
+const AGS_PERMANENT_ADMIN_CODE = "239367SG";
 const AGS_API_URL = "https://script.google.com/macros/s/AKfycbzc7I7XJgwVNqh992FEqoOxkxzlx7o2AC1kFl-mLN7mbmTCyZMJdDD7qournbyEHoYT/exec";
 async function apiGet(action, params={}) {
   const u = new URL(AGS_API_URL);
@@ -1019,6 +1021,8 @@ let results=JSON.parse(localStorage.getItem(KEYS.results)||"{}");
 let settings=JSON.parse(localStorage.getItem(KEYS.settings)||"{}");
 
 function init(){
+  if(settings && settings.adminCode){delete settings.adminCode;localStorage.setItem(KEYS.settings,JSON.stringify(settings));}
+
   const ws=document.getElementById("weekSelect");
   for(let i=1;i<=18;i++){let o=document.createElement("option");o.value=i;o.textContent="Week "+i;ws.appendChild(o)}
   ws.value=selectedWeek; ws.onchange=()=>{selectedWeek=ws.value;loadWeek()};
@@ -1030,6 +1034,7 @@ function init(){
   loadWeek(); renderStandings(); renderSeasonStandings(); renderPlayerScoreboard(); applyTheme();
   refreshNFLData(false);
   refreshPlayerStats(false);
+  restoreAdminSession();
   testAGSBackend(false).then(()=>refreshSharedStandings()).catch(()=>{});
   const fgs=document.getElementById("fgStreak"),fgb=document.getElementById("fgBest");
   if(fgs)fgs.textContent=localStorage.getItem("ags_fg_streak")||"0";
@@ -1594,8 +1599,37 @@ function renderChanceLab(){
 }
 
 function unlockAdmin(){
- if(document.getElementById("adminCode").value!==(settings.adminCode||"239367SG"))return toast("Admin code not recognized");
- document.getElementById("adminPanel").classList.add("show");document.getElementById("adminLock").style.display="none";renderAdmin();renderChanceLab()
+ const entered=(document.getElementById("adminCode")?.value||"").trim();
+ if(entered!==AGS_PERMANENT_ADMIN_CODE){
+   toast("Admin code not recognized");
+   return;
+ }
+ sessionStorage.setItem("ags_admin_unlocked","1");
+ const panel=document.getElementById("adminPanel");
+ const lock=document.getElementById("adminLock");
+ if(panel)panel.classList.add("show");
+ if(lock)lock.style.display="none";
+ renderAdmin();
+ renderChanceLab();
+ toast("Admin unlocked");
+}
+function lockAdmin(){
+ sessionStorage.removeItem("ags_admin_unlocked");
+ const panel=document.getElementById("adminPanel");
+ const lock=document.getElementById("adminLock");
+ const input=document.getElementById("adminCode");
+ if(panel)panel.classList.remove("show");
+ if(lock)lock.style.display="";
+ if(input)input.value="";
+ toast("Admin locked");
+}
+function restoreAdminSession(){
+ if(sessionStorage.getItem("ags_admin_unlocked")==="1"){
+   const panel=document.getElementById("adminPanel");
+   const lock=document.getElementById("adminLock");
+   if(panel)panel.classList.add("show");
+   if(lock)lock.style.display="none";
+ }
 }
 function renderAdmin(){
  const games=getWeek(),r=results["week_"+selectedWeek]||{},entries=JSON.parse(localStorage.getItem(KEYS.entries)||"[]").filter(e=>e.week===selectedWeek);
