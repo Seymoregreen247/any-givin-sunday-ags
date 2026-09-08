@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b1320" />
+<title>AGS Football Pool — QA Game Day Edition</title>
+<style>
+:root{
+  --bg:#08111d;--panel:#0f1c2d;--panel2:#13243a;--text:#f6f8fb;--muted:#a9b5c6;
+  --line:#263a54;--accent:#7cf29c;--accent2:#e63946;--danger:#ff6b6b;--blue:#6ec1ff;
+  --shadow:0 16px 45px rgba(0,0,0,.28);--radius:22px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:
+radial-gradient(circle at 20% 0%,rgba(110,193,255,.12),transparent 35%),
+linear-gradient(180deg,#07101b,#091521 45%,#07101a);color:var(--text);min-height:100vh}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1160px;margin:auto;padding:18px 16px 90px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:50;
+background:rgba(8,17,29,.88);backdrop-filter:blur(14px);padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.brand{display:flex;align-items:center;gap:12px}
+.ball{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:
+linear-gradient(145deg,#6b3f20,#9b5a2b);border:3px solid #c78955;box-shadow:inset 0 0 0 2px #4c2a16;font-size:24px}
+.brand h1{font-size:20px;line-height:1;margin:0}
+.brand small{display:block;color:var(--muted);margin-top:4px}
+.iconbtn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:14px;padding:10px 12px}
+.hero{margin-top:22px;padding:26px;border-radius:28px;background:
+linear-gradient(135deg,rgba(124,242,156,.13),rgba(110,193,255,.09)),var(--panel);
+border:1px solid var(--line);box-shadow:var(--shadow);display:grid;grid-template-columns:1.2fr .8fr;gap:22px}
+.kicker{color:var(--accent);font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:12px}
+.hero h2{font-size:clamp(32px,6vw,58px);margin:8px 0 12px;line-height:.98}
+.hero p{color:var(--muted);font-size:17px;max-width:700px;line-height:1.5}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-content:center}
+.stat{padding:17px;border:1px solid var(--line);border-radius:18px;background:rgba(7,16,27,.48)}
+.stat b{font-size:27px;display:block}.stat span{color:var(--muted);font-size:12px}
+.nav{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:18px 0}
+.nav button{padding:14px 10px;border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--text);font-weight:750}
+.nav button.active{background:var(--accent);color:#06200f;border-color:transparent}
+.section{display:none}.section.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin:14px 0}
+.weekbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.weekbar h3{margin:0;font-size:24px}
+.weekselect{background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:11px 14px;border-radius:14px}
+.progress{height:11px;background:#07101a;border-radius:99px;overflow:hidden;border:1px solid var(--line);margin:14px 0 7px}
+.progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--blue));transition:.25s}
+.progresstext{color:var(--muted);font-size:13px}
+.games{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:14px}
+.game{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,var(--panel2),#0d1a2a);padding:16px}
+.game.locked{opacity:.68}
+.gamemeta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px;margin-bottom:10px}
+.teams{display:grid;grid-template-columns:1fr 42px 1fr;align-items:center;gap:8px}
+.team{min-height:88px;border:1px solid var(--line);border-radius:17px;background:#0a1625;color:var(--text);padding:13px;text-align:center;font-weight:800}
+.team:hover{border-color:#4d6c91;transform:translateY(-1px)}
+.team .abbr{font-size:24px;display:block;margin-bottom:4px}.team small{font-size:12px;color:var(--muted)}
+.team.selected{background:linear-gradient(180deg,rgba(124,242,156,.22),rgba(124,242,156,.08));border:2px solid var(--accent);box-shadow:0 0 0 3px rgba(124,242,156,.08)}
+.at{text-align:center;color:var(--muted);font-size:13px;font-weight:800}
+.actionrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.primary,.secondary,.danger{border:0;border-radius:15px;padding:13px 17px;font-weight:850}
+.primary{background:var(--accent);color:#06200f}.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.danger{background:rgba(255,107,107,.12);color:#ffb0b0;border:1px solid rgba(255,107,107,.35)}
+.notice{padding:14px 15px;border-radius:16px;background:rgba(233,196,106,.08);border:1px solid rgba(233,196,106,.28);color:#f7e4a4;margin:12px 0}
+.good{background:rgba(124,242,156,.08);border-color:rgba(124,242,156,.3);color:#bdf8ca}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:7px}
+.input{width:100%;background:#0a1625;color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px 13px}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:17px}
+table{width:100%;border-collapse:collapse;min-width:630px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.rank{font-size:20px;font-weight:900}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:7px 10px;background:var(--panel2);border:1px solid var(--line);font-size:12px}
+.checklist{display:grid;gap:10px}
+.check{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;border:1px solid var(--line);border-radius:16px;padding:12px;background:#0b1828}
+.checkmark{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(124,242,156,.12);color:var(--accent);font-weight:900}
+.check.warn .checkmark{background:rgba(233,196,106,.12);color:var(--accent2)}
+.admin-only{display:none}
+.admin-only.show{display:block}
+.small{font-size:12px;color:var(--muted)}
+.footer{text-align:center;color:var(--muted);margin:28px 0;font-size:12px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#fff;color:#111;padding:12px 16px;border-radius:14px;font-weight:800;box-shadow:var(--shadow);transition:.25s;z-index:99}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.print-sheet{display:none}
+@media(max-width:760px){
+ .hero{grid-template-columns:1fr;padding:20px}.stats{grid-template-columns:repeat(2,1fr)}
+ .nav{grid-template-columns:repeat(2,1fr)}.games,.grid2{grid-template-columns:1fr}
+ .hero h2{font-size:42px}.brand small{display:none}
+}
+@media print{
+ body{background:#fff;color:#000}.wrap>*{display:none!important}.print-sheet{display:block!important;background:#fff;color:#000;padding:12px}
+ .print-sheet h1,.print-sheet h2{text-align:center}.print-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ .print-game{border:1px solid #222;border-radius:8px;padding:9px;font-size:12px}
+ .print-line{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px dotted #999}
+ .print-line:last-child{border:0}.print-foot{margin-top:16px;border-top:2px solid #000;padding-top:10px}
+}
+
+.roster-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.roster-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.player-row{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--line);border-radius:15px;background:#0b1828}
+.jersey{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;background:var(--panel2);font-weight:900;font-size:18px;border:1px solid var(--line)}
+.player-row b{display:block}.player-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.data-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.dot.warn{background:var(--accent2)}
+@media(max-width:760px){.roster-toolbar,.roster-list{grid-template-columns:1fr}.nav{grid-template-columns:repeat(2,1fr)}}
+
+
+.prediction-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.pred-card{border:1px solid var(--line);border-radius:18px;padding:15px;background:#0b1828}
+.locked-pred{opacity:.82;border-color:rgba(124,242,156,.45)}
+.big-badge{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:99px;background:rgba(124,242,156,.1);border:1px solid rgba(124,242,156,.3);font-weight:800}
+.qb-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.qb-stat{padding:12px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);text-align:center}
+.qb-stat b{display:block;font-size:21px}.qb-stat span{font-size:11px;color:var(--muted)}
+.chance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.chance-card{padding:13px;border:1px solid var(--line);border-radius:15px;background:#0b1828}
+@media(max-width:760px){.prediction-grid,.qb-stats,.chance-grid{grid-template-columns:1fr}}
+
+
+.score-hero{display:grid;grid-template-columns:1.2fr repeat(4,.8fr);gap:12px;margin:16px 0}
+.score-tile{padding:14px;border-radius:17px;border:1px solid var(--line);background:#0b1828}
+.score-tile .num{font-size:26px;font-weight:950;line-height:1.05}
+.score-tile .cap{font-size:11px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.08em}
+.winner-banner{display:none;margin:14px 0;padding:18px;border-radius:18px;border:1px solid rgba(124,242,156,.4);background:rgba(124,242,156,.09)}
+.winner-banner.show{display:block}
+.winner-name{font-size:28px;font-weight:950;margin-top:4px}
+.live-leader{font-weight:900}
+.funzone-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.fun-card{padding:16px;border:1px solid var(--line);border-radius:17px;background:#0b1828}
+@media(max-width:900px){.score-hero{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.score-hero,.funzone-grid{grid-template-columns:1fr}}
+
+
+.section{scroll-margin-top:18px}
+@media(max-width:760px){.section{scroll-margin-top:12px}}
+
+
+.section-jump{display:flex;justify-content:flex-end;margin:0 0 10px}
+.section-jump button{font-size:12px}
+
+
+:root{
+  --football-navy:#071a2f;
+  --football-red:#c8202f;
+  --football-silver:#c8d0d8;
+  --football-green:#123d2a;
+}
+body{
+  background:
+    radial-gradient(circle at 50% -10%,rgba(255,255,255,.06),transparent 30%),
+    linear-gradient(180deg,#06101b 0%,#091522 40%,#06101b 100%);
+}
+.hero{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+  background:
+    linear-gradient(180deg,rgba(7,26,47,.96),rgba(5,14,25,.96));
+}
+.hero:before{
+  content:"";
+  position:absolute;inset:0;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 8.8%,rgba(255,255,255,.045) 8.8% 9%),
+    linear-gradient(90deg,transparent 49.6%,rgba(255,255,255,.08) 49.6% 50.4%,transparent 50.4%);
+  pointer-events:none;
+}
+.hero:after{
+  content:"10   20   30   40   50   40   30   20   10";
+  position:absolute;
+  left:0;right:0;bottom:10px;
+  text-align:center;
+  font-weight:950;
+  letter-spacing:1.2em;
+  color:rgba(255,255,255,.07);
+  font-size:22px;
+  white-space:nowrap;
+  pointer-events:none;
+}
+.hero h1,.hero h2,.hero h3{
+  text-transform:uppercase;
+  letter-spacing:.025em;
+  text-shadow:0 2px 0 rgba(0,0,0,.35);
+}
+.kicker{
+  color:#d9e0e7;
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-weight:900;
+}
+.nav{
+  background:linear-gradient(180deg,#0a223d,#071a2f);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;
+  padding:8px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.nav button{
+  border-radius:10px;
+  text-transform:uppercase;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+.nav button.active{
+  background:linear-gradient(180deg,var(--football-red),#8f1520);
+  color:white;
+  border-color:rgba(255,255,255,.18);
+}
+.card{
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.11);
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+}
+.card h3{
+  text-transform:uppercase;
+  letter-spacing:.02em;
+}
+.match{
+  position:relative;
+  border-left:5px solid var(--football-red);
+  background:linear-gradient(90deg,rgba(200,32,47,.05),rgba(255,255,255,0));
+}
+.match:before{
+  content:"";
+  position:absolute;
+  top:0;bottom:0;left:49%;
+  width:1px;
+  background:rgba(255,255,255,.04);
+}
+.score-tile{
+  position:relative;
+  background:linear-gradient(180deg,#0c1f32,#081522);
+  border-top:3px solid var(--football-red);
+}
+.score-tile .num{
+  font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;
+  letter-spacing:.03em;
+}
+.winner-banner{
+  background:
+    linear-gradient(135deg,rgba(200,32,47,.18),rgba(7,26,47,.9));
+  border:1px solid rgba(255,255,255,.16);
+}
+.winner-name{
+  font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.035em;
+}
+.weekbar{
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding-bottom:10px;
+}
+.primary{
+  background:linear-gradient(180deg,var(--football-red),#971722)!important;
+  color:#fff!important;
+}
+.secondary{
+  border-color:rgba(200,32,47,.45)!important;
+}
+.football-strip{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:12px;
+  align-items:center;
+  margin:12px 0 18px;
+  padding:10px 14px;
+  border-radius:14px;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 8%,transparent 8% 16%),
+    linear-gradient(180deg,#123d2a,#0b2a1d);
+  border:1px solid rgba(255,255,255,.1);
+  color:#fff;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.football-icon{
+  width:54px;height:34px;border-radius:50%;
+  background:#7b3f1e;
+  border:2px solid #e9e1d0;
+  transform:rotate(-15deg);
+  position:relative;
+  margin:auto;
+}
+.football-icon:before{
+  content:"";
+  position:absolute;
+  left:12px;right:12px;top:15px;
+  height:2px;background:#fff;
+}
+.football-icon:after{
+  content:"";
+  position:absolute;
+  width:2px;height:12px;background:#fff;
+  left:25px;top:10px;
+  box-shadow:-5px 0 0 #fff,5px 0 0 #fff;
+}
+.section-titlebar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border-bottom:3px solid var(--football-red);
+  padding-bottom:8px;margin-bottom:12px;
+}
+.download-panel{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--line);
+}
+@media(max-width:760px){
+  .hero:after{font-size:14px;letter-spacing:.55em}
+  .football-strip{grid-template-columns:1fr}
+  .football-strip .football-icon{order:-1}
+}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <div class="ball">🏈</div>
+      <div><h1>AGS Football Pool</h1><small>Any Given Sunday • Pick • Track • Brag</small></div>
+    </div>
+    <button class="iconbtn" id="themeBtn" title="Theme">☀️</button>
+  </header>
+
+  <section class="hero">
+    <div>
+      <div class="kicker">ANY GIVEN SUNDAY • 2026 PICK'EM</div>
+      <h2>Any Given Sunday.<br>Own the week.</h2>
+      <p>Choose one team from every matchup. Each correct pick earns one point. Your weekly percentage and ranking update automatically. Original football-cinema styling, built in New England. No movie artwork or actor likenesses are used.</p>
+      <div class="actionrow">
+        <button class="primary" onclick="showTab('picks')" aria-label="Go to Picks">Make My Picks</button>
+        <button class="secondary" onclick="window.print()">🖨 Print Pool Sheet</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="heroGames">16</b><span>Week 1 Games</span></div>
+      <div class="stat"><b id="heroPicked">0</b><span>Your Picks</span></div>
+      <div class="stat"><b id="heroScore">—</b><span>Weekly Score</span></div>
+      <div class="stat"><b id="heroPct">—</b><span>Correct</span></div>
+    </div>
+  </section>
+
+  <nav class="nav" aria-label="AGS Football Pool sections">
+    <button data-tab="picks" class="active" onclick="showTab('picks')">🏈 Picks</button>
+    <button data-tab="standings" onclick="showTab('standings')">🏆 Standings</button>
+    <button data-tab="seasonpicks" onclick="showTab('seasonpicks')">🔒 Season Picks</button>
+    <button data-tab="rosters" onclick="showTab('rosters')">👥 Rosters</button>
+    <button data-tab="funzone" onclick="showTab('funzone')">🎮 Fun Zone</button>
+    <button data-tab="how" onclick="showTab('how')">📘 Rules</button>
+  </nav>
+  <div class="small" style="text-align:center;margin:8px 0 0;color:var(--muted)">Tap any section and AGS will take you directly there.</div>
+  <div class="football-strip">
+    <span>Built in New England</span>
+    <div class="football-icon" aria-hidden="true"></div>
+    <span>Pick • Track • Brag</span>
+  </div>
+
+  <section id="picks" class="section active">
+    <div class="card">
+      <div class="weekbar">
+        <div><div class="kicker">Current Pool</div><h3 id="weekTitle">NFL Week 1</h3></div>
+        <select class="weekselect" id="weekSelect"></select>
+      </div>
+      <div class="progress"><i id="pickProgress"></i></div>
+      <div class="progresstext" id="pickCount">0 of 16 picks made</div>
+      <div id="playerNotice" class="notice">Enter your name below before submitting your picks.</div>
+      <div class="grid2">
+        <div><div class="label">YOUR NAME</div><input id="playerName" oninput="renderPlayerScoreboard()" class="input" placeholder="Example: Seymore" maxlength="40"/></div>
+        <div><div class="label">POOL / GROUP NAME</div><input id="poolName" class="input" value="AGS Football Pool Friends" maxlength="50"/></div>
+      </div>
+    </div>
+    <div id="games" class="games"></div>
+    <div class="card">
+      <div class="label">MONDAY NIGHT TIEBREAKER</div>
+      <p style="margin-top:3px">Predict the <b>combined total points</b> in the final game of the week.</p>
+      <input id="tiebreaker" class="input" type="number" min="0" max="150" placeholder="Example: 47" style="max-width:240px"/>
+      <div class="actionrow">
+        <button class="primary" id="submitBtn" onclick="submitPicks();setTimeout(syncLatestPicksToBackend,150)">Submit My Picks</button>
+        <button class="secondary" onclick="saveDraft()">Save Draft</button>
+        <button class="secondary" onclick="shareMyPicks()">📲 Share My Picks</button>
+        <button class="secondary" onclick="window.print()">🖨 Print This Week</button>
+      </div>
+      <p class="small">Games lock individually at their scheduled kickoff time. AGS Football Pool is a free prediction and scorekeeping game and does not process wagers, entry fees, stakes, deposits, prizes of value or payouts.</p>
+    </div>
+
+    <div class="card">
+      <div class="kicker">Game-Day Fun</div>
+      <h3 style="margin:7px 0 8px">Sunday Conversation Starter</h3>
+      <p style="color:var(--muted);margin-top:0">After you make your picks, use <b>Share My Picks</b> to copy a clean Week <span id="talkWeek">1</span> card into your family or friends chat. No scores are spoiled—just your choices and the tiebreaker.</p>
+      <div class="notice good">🏈 Make the picks. Talk a little trash. Come back after the games and see who really knew football.</div>
+    </div>
+  </section>
+
+  <section id="standings" class="section">
+    <div class="section-jump"><button class="secondary" onclick="showTab('picks')">← Back to Picks</button></div>
+    <div class="card">
+      <div class="weekbar"><div><div class="kicker">Leaderboard</div><h3>Weekly Standings</h3></div><span class="pill">🏆 Ranked by Correct %</span></div>
+      <div class="tablewrap" style="margin-top:14px">
+        <table><thead><tr><th>Rank</th><th>Player</th><th>Correct</th><th>Record</th><th>Percent</th><th>Tiebreaker</th></tr></thead>
+        <tbody id="leaderRows"></tbody></table>
+      </div>
+      <div class="notice" style="margin-top:14px">Demo mode stores entries on this device. Connecting Google Apps Script will make the leaderboard shared across everyone using the pool.</div>
+      <div class="card" style="margin-top:18px;box-shadow:none">
+        <div class="weekbar">
+          <div><div class="kicker">Season Race</div><h3>Overall Percentage Leaders</h3></div>
+          <span class="pill">Weeks Played Combined</span>
+        </div>
+        <p class="small">Season ranking uses total correct picks divided by total completed games across all submitted weeks.</p>
+        <div class="tablewrap" style="margin-top:12px">
+          <table><thead><tr><th>Rank</th><th>Player</th><th>Correct</th><th>Completed</th><th>Season %</th></tr></thead>
+          <tbody id="seasonLeaderRows"></tbody></table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+
+  <section id="seasonpicks" class="section">
+    <div class="section-jump"><button class="secondary" onclick="showTab('picks')">← Back to Picks</button></div>
+    <div class="card">
+      <div class="weekbar">
+        <div>
+          <div class="kicker">Lock It In</div>
+          <h3>Season Locker Room Predictions</h3>
+        </div>
+        <span class="big-badge">🔒 One preseason call</span>
+      </div>
+      <p class="small">Make your long-range predictions before the season gets rolling. These are for bragging rights and AGS bonus badges; they do not change your weekly correct-pick percentage.</p>
+
+      <div class="prediction-grid">
+        <div class="pred-card">
+          <div class="label">AFC SUPER BOWL TEAM</div>
+          <select id="afcPick" class="weekselect" style="width:100%"></select>
+        </div>
+        <div class="pred-card">
+          <div class="label">NFC SUPER BOWL TEAM</div>
+          <select id="nfcPick" class="weekselect" style="width:100%"></select>
+        </div>
+        <div class="pred-card">
+          <div class="label">SUPER BOWL CHAMPION</div>
+          <select id="champPick" class="weekselect" style="width:100%"></select>
+        </div>
+        <div class="pred-card">
+          <div class="label">PRESEASON MVP PICK</div>
+          <select id="mvpPick" class="weekselect" style="width:100%"></select>
+        </div>
+      </div>
+
+      <div class="actionrow">
+        <button id="lockSeasonBtn" class="primary" onclick="lockSeasonPredictions()">🔒 Lock Season Locker Room Predictions</button>
+      </div>
+      <div id="seasonLockNotice" class="notice">Once locked, these predictions stay fixed on this device unless Admin resets them.</div>
+    </div>
+
+    <div class="card">
+      <div class="kicker">Favorite Quarterback</div>
+      <h3>QB Watch</h3>
+      <p class="small">Pick your favorite quarterback and AGS will follow his season totals as the stats feed updates.</p>
+      <div class="grid2">
+        <select id="favoriteQB" class="weekselect" onchange="saveFavoriteQB()" style="width:100%"></select>
+        <button class="secondary" onclick="refreshPlayerStats(true)">↻ Refresh QB Stats</button>
+      </div>
+      <div id="qbWatchName" style="font-size:24px;font-weight:900;margin-top:16px">Choose a quarterback</div>
+      <div id="qbWatchTeam" class="small"></div>
+      <div class="qb-stats">
+        <div class="qb-stat"><b id="qbGames">—</b><span>Games</span></div>
+        <div class="qb-stat"><b id="qbPassYds">—</b><span>Pass Yards</span></div>
+        <div class="qb-stat"><b id="qbPassTD">—</b><span>Pass TD</span></div>
+        <div class="qb-stat"><b id="qbINT">—</b><span>INT</span></div>
+      </div>
+      <div id="qbStatus" class="notice" style="margin-top:12px">The season has not started yet, so live 2026 QB totals may still be empty.</div>
+    </div>
+
+    <div class="card">
+      <div class="kicker">MVP Watch</div>
+      <h3>Who's Making a Case?</h3>
+      <p class="small">AGS shows a statistical watch list from current season production. This is not an official NFL MVP ranking and is not based on betting odds.</p>
+      <div id="mvpWatchList" class="checklist"></div>
+    </div>
+  </section>
+
+  <section id="rosters" class="section">
+    <div class="section-jump"><button class="secondary" onclick="showTab('picks')">← Back to Picks</button></div>
+    <div class="card">
+      <div class="weekbar">
+        <div>
+          <div class="kicker">2026 Team Rosters</div>
+          <h3>Who's on the team?</h3>
+        </div>
+        <button class="secondary" onclick="refreshNFLData(true)">↻ Refresh NFL Data</button>
+      </div>
+      <p class="small">Rosters can change during the season because of trades, injuries, practice-squad moves and releases. AGS refreshes the roster dataset and stores a local copy for faster loading.</p>
+      <div class="data-status">
+        <span class="pill"><span id="rosterDot" class="dot warn"></span><span id="rosterStatus">Roster data loading…</span></span>
+        <span class="pill" id="rosterUpdated">Last update: —</span>
+      </div>
+      <div class="roster-toolbar">
+        <select id="teamSelect" class="weekselect" onchange="renderRosterFromBackend()"></select>
+        <input id="playerSearch" class="input" placeholder="Search player or position…" oninput="renderRosterFromBackend()"/>
+      </div>
+      <div id="rosterCount" class="progresstext"></div>
+      <div id="rosterList" class="roster-list" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+
+  <section id="funzone" class="section">
+    <div class="section-jump"><button class="secondary" onclick="showTab('picks')">← Back to Picks</button></div>
+    <div class="card">
+      <div class="kicker">AGS Sideline</div>
+      <h3>Stay in the Game</h3>
+      <p class="small">Quick games and conversation starters while you wait for kickoff and scores.</p>
+
+      <div class="funzone-grid">
+        <div class="fun-card">
+          <div style="font-size:34px">🏈</div>
+          <h3 style="margin:8px 0">Field Goal Challenge</h3>
+          <p class="small">Pick left, middle or right. Beat the randomly moving defense.</p>
+          <div class="actionrow">
+            <button class="secondary" onclick="kickFieldGoal('L')">Left</button>
+            <button class="secondary" onclick="kickFieldGoal('M')">Middle</button>
+            <button class="secondary" onclick="kickFieldGoal('R')">Right</button>
+          </div>
+          <div id="fgResult" class="notice" style="margin-top:10px">Make your first kick.</div>
+          <div class="small" style="margin-top:8px">Streak: <b id="fgStreak">0</b> • Best: <b id="fgBest">0</b></div>
+        </div>
+
+        <div class="fun-card">
+          <div style="font-size:34px">⚡</div>
+          <h3 style="margin:8px 0">Quick Pick</h3>
+          <p class="small">AGS chooses a random matchup from this week. Make an instant gut pick.</p>
+          <button class="secondary" onclick="quickPickChallenge()">Give Me a Matchup</button>
+          <div id="quickPickBox" class="notice" style="margin-top:10px">Tap the button to start.</div>
+        </div>
+
+        <div class="fun-card">
+          <div style="font-size:34px">💬</div>
+          <h3 style="margin:8px 0">Football Talk</h3>
+          <p class="small">A random question for the group chat.</p>
+          <button class="secondary" onclick="footballTalk()">New Question</button>
+          <div id="talkQuestion" class="notice" style="margin-top:10px">Who is your favorite quarterback this season?</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="section">
+    <div class="section-jump"><button class="secondary" onclick="showTab('picks')">← Back to Picks</button></div>
+    <div class="card">
+      <div class="kicker">Simple Rules</div><h3 style="font-size:28px;margin:7px 0">How to Play</h3>
+      <div class="checklist">
+        <div class="check"><div class="checkmark">1</div><div><b>Pick one winner in every game.</b><div class="small">Tap the team you think will win.</div></div></div>
+        <div class="check"><div class="checkmark">2</div><div><b>Submit before kickoff.</b><div class="small">Each game locks when that game begins.</div></div></div>
+        <div class="check"><div class="checkmark">3</div><div><b>One correct pick = one point.</b><div class="small">No point spread is required in the standard game.</div></div></div>
+        <div class="check"><div class="checkmark">4</div><div><b>Highest score wins the week.</b><div class="small">Correct percentage = correct picks ÷ completed games.</div></div></div>
+        <div class="check"><div class="checkmark">5</div><div><b>Highest correct percentage leads.</b><div class="small">Example: 10 correct out of 15 completed games = 66.7%.</div></div></div>
+        <div class="check"><div class="checkmark">6</div><div><b>Ties go to the tiebreaker.</b><div class="small">Closest predicted combined score for the final game wins the tie.</div></div></div>
+      </div>
+
+      <div class="card" style="margin:18px 0 0;box-shadow:none">
+        <div class="kicker">AGS House Rules</div>
+        <h3 style="margin:7px 0 10px">Friendly Competition. Clear Rules.</h3>
+        <div class="checklist">
+          <div class="check"><div class="checkmark">✓</div><div><b>Free to play in the app.</b><div class="small">AGS does not collect entry fees, accept wagers, hold balances, or distribute winnings.</div></div></div>
+          <div class="check"><div class="checkmark">✓</div><div><b>Picks are for fun and bragging rights.</b><div class="small">Standings, percentages, printable sheets and group discussion are the core experience.</div></div></div>
+          <div class="check"><div class="checkmark">✓</div><div><b>One pick per game.</b><div class="small">Straight Pick'em is the default: choose the team you think will win.</div></div></div>
+          <div class="check"><div class="checkmark">✓</div><div><b>Games lock at kickoff.</b><div class="small">Once a game's scheduled kickoff time arrives, that matchup can no longer be changed.</div></div></div>
+          <div class="check"><div class="checkmark">✓</div><div><b>Late schedule changes can be updated by Admin.</b><div class="small">Kickoff times and weekly schedules should be refreshed before the pool opens.</div></div></div>
+          <div class="check"><div class="checkmark">✓</div><div><b>Football lines are informational only.</b><div class="small">If favorites, spreads or totals are shown later, AGS will display them as reference information and not as a wagering interface.</div></div></div>
+        </div>
+        <div class="notice" style="margin-top:14px">
+          <b>Important:</b> AGS Football Pool is designed as a free prediction and scorekeeping game. It is not a sportsbook and does not process bets, entry fees, stakes, prizes of value, deposits or payouts. Local laws can vary, so any separate money activity should be reviewed independently before use.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="admin" class="section">
+    <div class="section-jump"><button class="secondary" onclick="showTab('picks')">← Back to Picks</button></div>
+    <div class="card" id="adminLock">
+      <div class="kicker">Pool Manager</div><h3 style="margin:7px 0 14px">Admin Access</h3>
+      <div class="grid2">
+        <input id="adminCode" class="input" type="password" placeholder="Enter admin code"/>
+        <button class="primary" onclick="unlockAdmin()">Unlock Admin</button>
+      </div>
+      <p class="small">Admin code: <b>239367SG</b>. Change it before public deployment.</p>
+    </div>
+
+    <div id="adminPanel" class="admin-only">
+      <div class="card">
+        <div class="weekbar"><div><div class="kicker">Weekly Setup Assistant</div><h3>What needs attention?</h3></div><span id="readyPill" class="pill">Checking…</span></div>
+        <div id="weeklyChecklist" class="checklist" style="margin-top:14px"></div>
+      </div>
+
+
+      <div class="card">
+        <div class="kicker">Admin Only • Probability Lab</div>
+        <h3>How Hard Is a Perfect Card?</h3>
+        <p class="small">This calculator shows neutral probability for random 50/50 picks. It does not calculate stakes, pots, payouts or wagering returns.</p>
+        <div class="grid2">
+          <div><div class="label">NUMBER OF PEOPLE</div><input id="chancePlayers" class="input" type="number" min="1" max="10000" value="30" oninput="renderChanceLab()"/></div>
+          <div><div class="label">NUMBER OF GAMES</div><input id="chanceGames" class="input" type="number" min="1" max="25" value="10" oninput="renderChanceLab()"/></div>
+        </div>
+        <div class="chance-grid" style="margin-top:14px">
+          <div class="chance-card"><div class="small">One person perfect</div><b id="onePerfect" style="font-size:24px">—</b></div>
+          <div class="chance-card"><div class="small">At least one perfect in group</div><b id="groupPerfect" style="font-size:24px">—</b></div>
+          <div class="chance-card"><div class="small">Exact combinations</div><b id="comboCount" style="font-size:24px">—</b></div>
+        </div>
+        <div class="tablewrap" style="margin-top:14px">
+          <table><thead><tr><th>Correct</th><th>Chance for one random card</th><th>Approx. odds</th></tr></thead><tbody id="chanceRows"></tbody></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="kicker">Season Prediction Control</div>
+        <h3>Locked Prediction Reset</h3>
+        <p class="small">Use only if a player locked a prediction accidentally. Resetting removes the local locked prediction.</p>
+        <button class="danger" onclick="resetSeasonPredictions()">Reset Local Season Locker Room Predictions</button>
+      </div>
+
+
+      <div class="card">
+        <div class="kicker">Production QA</div>
+        <h3>Game-Day Readiness</h3>
+        <div class="checklist">
+          <div class="check"><div class="checkmark">✓</div><div><b>Winner visibility</b><div class="small">Weekly percentage, rank, current leader and final winner banner are player-facing.</div></div></div>
+          <div class="check"><div class="checkmark">✓</div><div><b>Shared scoring</b><div class="small">Picks and standings use the Google Apps Script backend with local fallback.</div></div></div>
+          <div class="check"><div class="checkmark">✓</div><div><b>Roster search</b><div class="small">Roster search now queries the shared backend first.</div></div></div>
+          <div class="check"><div class="checkmark">✓</div><div><b>Save / print</b><div class="small">Players can print, download picks and save a scorecard.</div></div></div>
+          <div class="check"><div class="checkmark">✓</div><div><b>Free-play boundary</b><div class="small">No wager, entry-fee, deposit, stake or payout processing is built into AGS.</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="kicker">Shared Google Sheets Backend</div>
+        <h3>AGS Cloud Connection</h3>
+        <p class="small">This build is preloaded with your deployed Google Apps Script Web App.</p>
+        <input class="input" id="agsBackendUrl" value="https://script.google.com/macros/s/AKfycbzc7I7XJgwVNqh992FEqoOxkxzlx7o2AC1kFl-mLN7mbmTCyZMJdDD7qournbyEHoYT/exec" readonly />
+        <div class="actionrow">
+          <button class="secondary" onclick="testAGSBackend(true)">Test Google Sheets Connection</button>
+        </div>
+        <div class="notice">Shared picks, standings, schedule and roster data can now come from the same Google Sheet for every device.</div>
+      </div>
+      <div class="card">
+        <div class="kicker">NFL Data Center</div>
+        <h3>Schedule, Scores & Rosters</h3>
+        <p class="small">AGS automatically pulls the 2026 regular-season schedule and roster data. It caches the latest successful download on this device and can refresh final scores for percentage scoring.</p>
+        <div class="checklist">
+          <div class="check"><div class="checkmark">↻</div><div><b>Full Weeks 1–18 schedule</b><div class="small" id="scheduleSyncStatus">Checking schedule feed…</div></div><button class="secondary" onclick="refreshNFLData(true)">Refresh</button></div>
+          <div class="check"><div class="checkmark">👥</div><div><b>All 32 team rosters</b><div class="small" id="rosterSyncStatus">Checking roster feed…</div></div><button class="secondary" onclick="showTab('rosters')">View</button></div>
+          <div class="check"><div class="checkmark">🏆</div><div><b>Automatic final-score grading</b><div class="small">When final scores are present in the schedule feed, AGS marks the winning team and recalculates percentages.</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="kicker">Google Apps Script</div><h3>Database Connection</h3>
+        <p class="small">Paste your deployed Apps Script Web App URL. Leave blank to use local demo storage.</p>
+        <input id="scriptUrl" class="input" placeholder="https://script.google.com/macros/s/.../exec"/>
+        <div class="actionrow"><button class="primary" onclick="saveSettings()">Save Connection</button><button class="secondary" onclick="testConnection()">Test</button></div>
+      </div>
+      <div class="card">
+        <div class="kicker">Results</div><h3>Enter Winners</h3>
+        <p class="small">After games finish, choose the winner. Standings will calculate immediately.</p>
+        <div id="resultsEditor" class="games"></div>
+      </div>
+      <div class="card">
+        <div class="kicker">Advanced</div><h3>Weekly Schedule Import</h3>
+        <p class="small">Later weeks can be loaded by pasting JSON generated from the current schedule. This keeps the app usable even before an automatic schedule feed is connected.</p>
+        <textarea id="scheduleJson" class="input" rows="8" placeholder='[{"away":"NE","awayName":"Patriots","home":"SEA","homeName":"Seahawks","kickoff":"2026-09-09T20:20:00-04:00"}]'></textarea>
+        <div class="actionrow"><button class="secondary" onclick="importSchedule()">Import Into Selected Week</button></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <div>AGS Football Pool • Any Given Sunday • Free weekly pick'em • Sharing, printing and scorekeeping.<br><span class="small">Schedule/roster/player-stat data: nflverse (CC BY 4.0). “Any Given Sunday” is used here as a football phrase/brand concept; the app does not use movie artwork, logos, footage, or actor likenesses.</span></div>
+    <div style="margin-top:12px"><button class="iconbtn" onclick="showTab('admin')" style="opacity:.72">⚙️ Admin</button></div>
+  </div>
+
+  <section class="print-sheet" id="printSheet">
+    <h1>AGS FOOTBALL POOL</h1><h2 id="printWeek">NFL WEEK 1 PICK'EM</h2>
+    <p><b>Name:</b> ____________________________________ &nbsp;&nbsp; <b>Pool:</b> __________________________</p>
+    <div class="print-grid" id="printGames"></div>
+    <div class="print-foot"><b>Final Game Tiebreaker — Combined Points:</b> __________</div>
+    <p style="font-size:10px;text-align:center;margin-top:18px">Circle or check one team in every matchup. Free prediction game only. AGS Football Pool does not accept wagers, entry fees, stakes, deposits or payouts.</p>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+
+const AGS_API_URL = "https://script.google.com/macros/s/AKfycbzc7I7XJgwVNqh992FEqoOxkxzlx7o2AC1kFl-mLN7mbmTCyZMJdDD7qournbyEHoYT/exec";
+async function apiGet(action, params={}) {
+  const u = new URL(AGS_API_URL);
+  u.searchParams.set("action", action);
+  Object.entries(params).forEach(([k,v]) => {
+    if(v !== undefined && v !== null && v !== "") u.searchParams.set(k, v);
+  });
+  const r = await fetch(u.toString(), {cache:"no-store"});
+  if(!r.ok) throw new Error("AGS backend HTTP " + r.status);
+  const j = await r.json();
+  if(j && j.ok === false) throw new Error(j.error || "AGS backend error");
+  return j;
+}
+async function apiPost(payload) {
+  const r = await fetch(AGS_API_URL, {
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload)
+  });
+  if(!r.ok) throw new Error("AGS backend HTTP " + r.status);
+  const j = await r.json();
+  if(j && j.ok === false) throw new Error(j.error || "AGS backend error");
+  return j;
+}
+async function testAGSBackend(showToast=true){
+  try{
+    const j = await apiGet("ping");
+    localStorage.setItem("ags_backend_ok","1");
+    localStorage.setItem("ags_backend_last_ping",new Date().toISOString());
+    if(showToast) toast("Google Sheets connected");
+    return j;
+  }catch(e){
+    console.warn(e);
+    localStorage.setItem("ags_backend_ok","0");
+    if(showToast) toast("Google Sheets connection failed");
+    throw e;
+  }
+}
+
+const WEEK1 = [
+ {away:"NE",awayName:"Patriots",home:"SEA",homeName:"Seahawks",kickoff:"2026-09-09T20:20:00-04:00",label:"Wed • Sep 9 • 8:20 PM ET"},
+ {away:"SF",awayName:"49ers",home:"LAR",homeName:"Rams",kickoff:"2026-09-10T20:35:00-04:00",label:"Thu • Sep 10 • 8:35 PM ET"},
+ {away:"CHI",awayName:"Bears",home:"CAR",homeName:"Panthers",kickoff:"2026-09-13T13:00:00-04:00",label:"Sun • Sep 13 • 1:00 PM ET"},
+ {away:"BAL",awayName:"Ravens",home:"IND",homeName:"Colts",kickoff:"2026-09-13T13:00:00-04:00",label:"Sun • Sep 13 • 1:00 PM ET"},
+ {away:"ATL",awayName:"Falcons",home:"PIT",homeName:"Steelers",kickoff:"2026-09-13T13:00:00-04:00",label:"Sun • Sep 13 • 1:00 PM ET"},
+ {away:"CLE",awayName:"Browns",home:"JAX",homeName:"Jaguars",kickoff:"2026-09-13T13:00:00-04:00",label:"Sun • Sep 13 • 1:00 PM ET"},
+ {away:"TB",awayName:"Buccaneers",home:"CIN",homeName:"Bengals",kickoff:"2026-09-13T13:00:00-04:00",label:"Sun • Sep 13 • 1:00 PM ET"},
+ {away:"NYJ",awayName:"Jets",home:"TEN",homeName:"Titans",kickoff:"2026-09-13T13:00:00-04:00",label:"Sun • Sep 13 • 1:00 PM ET"},
+ {away:"NO",awayName:"Saints",home:"DET",homeName:"Lions",kickoff:"2026-09-13T13:00:00-04:00",label:"Sun • Sep 13 • 1:00 PM ET"},
+ {away:"BUF",awayName:"Bills",home:"HOU",homeName:"Texans",kickoff:"2026-09-13T13:00:00-04:00",label:"Sun • Sep 13 • 1:00 PM ET"},
+ {away:"ARI",awayName:"Cardinals",home:"LAC",homeName:"Chargers",kickoff:"2026-09-13T16:25:00-04:00",label:"Sun • Sep 13 • 4:25 PM ET"},
+ {away:"GB",awayName:"Packers",home:"MIN",homeName:"Vikings",kickoff:"2026-09-13T16:25:00-04:00",label:"Sun • Sep 13 • 4:25 PM ET"},
+ {away:"MIA",awayName:"Dolphins",home:"LV",homeName:"Raiders",kickoff:"2026-09-13T16:25:00-04:00",label:"Sun • Sep 13 • 4:25 PM ET"},
+ {away:"WAS",awayName:"Commanders",home:"PHI",homeName:"Eagles",kickoff:"2026-09-13T16:25:00-04:00",label:"Sun • Sep 13 • 4:25 PM ET"},
+ {away:"DAL",awayName:"Cowboys",home:"NYG",homeName:"Giants",kickoff:"2026-09-13T20:20:00-04:00",label:"Sun • Sep 13 • 8:20 PM ET"},
+ {away:"DEN",awayName:"Broncos",home:"KC",homeName:"Chiefs",kickoff:"2026-09-14T20:15:00-04:00",label:"Mon • Sep 14 • 8:15 PM ET"}
+];
+const KEYS={weeks:"sgf_weeks",picks:"sgf_picks",entries:"sgf_entries",results:"sgf_results",settings:"sgf_settings"};
+const DATA_KEYS={rosters:"ags_rosters_2026",rostersUpdated:"ags_rosters_updated",scheduleUpdated:"ags_schedule_updated"};
+const NFL_SCHEDULE_URLS=[
+ "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+ "https://cdn.jsdelivr.net/gh/nflverse/nfldata@master/data/games.csv"
+];
+const NFL_ROSTER_URLS=[
+ "https://github.com/nflverse/nflverse-data/releases/download/rosters/roster_2026.csv",
+ "https://cdn.jsdelivr.net/gh/nflverse/nfldata@master/data/rosters.csv"
+];
+const NFL_PLAYER_STATS_URLS=[
+ "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_reg_2026.csv",
+ "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_2026.csv"
+];
+const TEAM_NAMES={
+ ARI:"Arizona Cardinals",ATL:"Atlanta Falcons",BAL:"Baltimore Ravens",BUF:"Buffalo Bills",
+ CAR:"Carolina Panthers",CHI:"Chicago Bears",CIN:"Cincinnati Bengals",CLE:"Cleveland Browns",
+ DAL:"Dallas Cowboys",DEN:"Denver Broncos",DET:"Detroit Lions",GB:"Green Bay Packers",
+ HOU:"Houston Texans",IND:"Indianapolis Colts",JAX:"Jacksonville Jaguars",JAC:"Jacksonville Jaguars",
+ KC:"Kansas City Chiefs",LV:"Las Vegas Raiders",LAC:"Los Angeles Chargers",LAR:"Los Angeles Rams",LA:"Los Angeles Rams",
+ MIA:"Miami Dolphins",MIN:"Minnesota Vikings",NE:"New England Patriots",NO:"New Orleans Saints",
+ NYG:"New York Giants",NYJ:"New York Jets",PHI:"Philadelphia Eagles",PIT:"Pittsburgh Steelers",
+ SF:"San Francisco 49ers",SEA:"Seattle Seahawks",TB:"Tampa Bay Buccaneers",TEN:"Tennessee Titans",WAS:"Washington Commanders"
+};
+let rosterData=JSON.parse(localStorage.getItem(DATA_KEYS.rosters)||"[]");
+let playerStats=JSON.parse(localStorage.getItem("ags_player_stats_2026")||"[]");
+let weeks=JSON.parse(localStorage.getItem(KEYS.weeks)||"null")||{"1":WEEK1};
+let selectedWeek="1";
+let picks={};
+let results=JSON.parse(localStorage.getItem(KEYS.results)||"{}");
+let settings=JSON.parse(localStorage.getItem(KEYS.settings)||"{}");
+
+function init(){
+  const ws=document.getElementById("weekSelect");
+  for(let i=1;i<=18;i++){let o=document.createElement("option");o.value=i;o.textContent="Week "+i;ws.appendChild(o)}
+  ws.value=selectedWeek; ws.onchange=()=>{selectedWeek=ws.value;loadWeek()};
+  document.getElementById("playerName").value=localStorage.getItem("sgf_name")||"";
+  document.getElementById("poolName").value=localStorage.getItem("sgf_pool")||"AGS Football Pool Friends";
+  document.getElementById("scriptUrl").value=settings.scriptUrl||"";
+  setupTeamSelect();
+  setupSeasonPredictionInputs();
+  loadWeek(); renderStandings(); renderSeasonStandings(); renderPlayerScoreboard(); applyTheme();
+  refreshNFLData(false);
+  refreshPlayerStats(false);
+  testAGSBackend(false).then(()=>refreshSharedStandings()).catch(()=>{});
+  const fgs=document.getElementById("fgStreak"),fgb=document.getElementById("fgBest");
+  if(fgs)fgs.textContent=localStorage.getItem("ags_fg_streak")||"0";
+  if(fgb)fgb.textContent=localStorage.getItem("ags_fg_best")||"0";
+}
+
+
+const AFC_TEAMS=["BAL","BUF","CIN","CLE","DEN","HOU","IND","JAC","KC","LAC","LV","MIA","NE","NYJ","PIT","TEN"];
+const NFC_TEAMS=["ARI","ATL","CAR","CHI","DAL","DET","GB","LAR","MIN","NO","NYG","PHI","SEA","SF","TB","WAS"];
+
+function optionHTML(list){
+ return '<option value="">Choose…</option>'+list.map(a=>`<option value="${a}">${TEAM_NAMES[a]||a}</option>`).join("");
+}
+function setupSeasonPredictionInputs(){
+ const afc=document.getElementById("afcPick"),nfc=document.getElementById("nfcPick"),champ=document.getElementById("champPick"),mvp=document.getElementById("mvpPick");
+ if(!afc)return;
+ afc.innerHTML=optionHTML(AFC_TEAMS);nfc.innerHTML=optionHTML(NFC_TEAMS);champ.innerHTML=optionHTML([...AFC_TEAMS,...NFC_TEAMS].sort((a,b)=>(TEAM_NAMES[a]||a).localeCompare(TEAM_NAMES[b]||b)));
+ populateQBChoices();
+ const saved=JSON.parse(localStorage.getItem("ags_season_predictions")||"null");
+ if(saved){
+  afc.value=saved.afc||"";nfc.value=saved.nfc||"";champ.value=saved.champ||"";mvp.value=saved.mvp||"";
+  if(saved.locked)applySeasonLock(saved);
+ }
+}
+function getQBs(){
+ return rosterData.filter(p=>String(p.position).toUpperCase()==="QB"&&p.name).sort((a,b)=>a.name.localeCompare(b.name));
+}
+function populateQBChoices(){
+ const qbs=getQBs(),mvp=document.getElementById("mvpPick"),fav=document.getElementById("favoriteQB");
+ const opts='<option value="">Choose quarterback…</option>'+qbs.map(q=>`<option value="${esc(q.name)}">${esc(q.name)} — ${esc(q.team)}</option>`).join("");
+ if(mvp){const old=mvp.value;mvp.innerHTML=opts;if(old)mvp.value=old}
+ if(fav){const saved=localStorage.getItem("ags_favorite_qb")||"";fav.innerHTML=opts;fav.value=saved}
+ renderFavoriteQB();
+}
+function lockSeasonPredictions(){
+ const afc=document.getElementById("afcPick").value,nfc=document.getElementById("nfcPick").value,champ=document.getElementById("champPick").value,mvp=document.getElementById("mvpPick").value;
+ if(!afc||!nfc||!champ||!mvp)return toast("Choose all four season predictions first");
+ if(champ!==afc&&champ!==nfc)return toast("Champion must be one of your two Super Bowl teams");
+ const saved={afc,nfc,champ,mvp,locked:true,lockedAt:new Date().toISOString()};
+ localStorage.setItem("ags_season_predictions",JSON.stringify(saved));applySeasonLock(saved);toast("Season predictions locked in");
+}
+function applySeasonLock(saved){
+ ["afcPick","nfcPick","champPick","mvpPick"].forEach(id=>document.getElementById(id).disabled=true);
+ const btn=document.getElementById("lockSeasonBtn");if(btn){btn.disabled=true;btn.textContent="✓ Predictions Locked"}
+ const n=document.getElementById("seasonLockNotice");if(n){n.className="notice good";n.textContent=`Locked ${new Date(saved.lockedAt).toLocaleString()}. Correct Super Bowl teams earn the AGS “Super Bonus” badge.`}
+}
+function resetSeasonPredictions(){
+ localStorage.removeItem("ags_season_predictions");
+ ["afcPick","nfcPick","champPick","mvpPick"].forEach(id=>{const e=document.getElementById(id);if(e)e.disabled=false});
+ const btn=document.getElementById("lockSeasonBtn");if(btn){btn.disabled=false;btn.textContent="🔒 Lock Season Locker Room Predictions"}
+ setupSeasonPredictionInputs();toast("Season predictions reset");
+}
+function saveFavoriteQB(){
+ localStorage.setItem("ags_favorite_qb",document.getElementById("favoriteQB").value);renderFavoriteQB()
+}
+async function refreshPlayerStats(force){
+ try{
+  const {text}=await fetchFirst(NFL_PLAYER_STATS_URLS);
+  const rows=parseCSV(text).filter(r=>!r.season||String(r.season)==="2026");
+  playerStats=rows;localStorage.setItem("ags_player_stats_2026",JSON.stringify(rows));localStorage.setItem("ags_player_stats_updated",new Date().toISOString());
+  renderFavoriteQB();renderMVPWatch();if(force)toast("Player stats refreshed");
+ }catch(e){
+  console.warn("Player stats refresh failed",e);renderFavoriteQB();renderMVPWatch();if(force)toast("Live player stats are not available yet");
+ }
+}
+function aggregateQB(name){
+ const rows=playerStats.filter(r=>(r.player_display_name||r.player_name||r.player||"")===name);
+ if(!rows.length)return null;
+ const maybeSeason=rows.find(r=>String(r.week)==="0"||String(r.summary_level||"").toLowerCase()==="reg");
+ const src=maybeSeason?[maybeSeason]:rows;
+ const sum=k=>src.reduce((a,r)=>a+(Number(r[k])||0),0);
+ return {
+  games: maybeSeason?(Number(maybeSeason.games)||Number(maybeSeason.games_played)||0):new Set(rows.map(r=>r.week).filter(Boolean)).size,
+  yards:sum("passing_yards"),td:sum("passing_tds"),ints:sum("interceptions"),
+  team:(rows[rows.length-1].recent_team||rows[rows.length-1].team||"")
+ };
+}
+function renderFavoriteQB(){
+ const name=localStorage.getItem("ags_favorite_qb")||"";
+ const nm=document.getElementById("qbWatchName");if(!nm)return;
+ if(!name){nm.textContent="Choose a quarterback";return}
+ const qb=getQBs().find(q=>q.name===name),s=aggregateQB(name);
+ nm.textContent=name;document.getElementById("qbWatchTeam").textContent=qb?TEAM_NAMES[qb.team]||qb.team:"";
+ document.getElementById("qbGames").textContent=s?s.games:"—";
+ document.getElementById("qbPassYds").textContent=s?s.yards.toLocaleString():"—";
+ document.getElementById("qbPassTD").textContent=s?s.td:"—";
+ document.getElementById("qbINT").textContent=s?s.ints:"—";
+ const st=document.getElementById("qbStatus");if(st)st.textContent=s?`2026 statistical totals loaded. Last stats refresh: ${localStorage.getItem("ags_player_stats_updated")?new Date(localStorage.getItem("ags_player_stats_updated")).toLocaleString():"recently"}`:"No 2026 regular-season stats are posted for this quarterback yet.";
+}
+function renderMVPWatch(){
+ const box=document.getElementById("mvpWatchList");if(!box)return;
+ const qbs=getQBs().map(q=>({q,s:aggregateQB(q.name)})).filter(x=>x.s&&x.s.games>0);
+ // Statistical watch score only; intentionally not presented as official MVP odds/ranking.
+ qbs.forEach(x=>x.watch=(x.s.td*8)+(x.s.yards/100)-(x.s.ints*5));
+ qbs.sort((a,b)=>b.watch-a.watch);
+ const top=qbs.slice(0,5);
+ box.innerHTML=top.length?top.map((x,i)=>`<div class="check"><div class="checkmark">${i+1}</div><div><b>${esc(x.q.name)}</b><div class="small">${esc(TEAM_NAMES[x.q.team]||x.q.team)} • ${x.s.yards.toLocaleString()} pass yds • ${x.s.td} TD • ${x.s.ints} INT</div></div><span class="pill">Stats Watch</span></div>`).join(""):'<div class="notice">The 2026 season has not produced enough regular-season stats for an MVP watch list yet.</div>';
+}
+
+function parseCSV(text){
+ const rows=[];let row=[],field="",q=false;
+ for(let i=0;i<text.length;i++){
+  const c=text[i],n=text[i+1];
+  if(c=='"'){if(q&&n=='"'){field+='"';i++}else q=!q}
+  else if(c==','&&!q){row.push(field);field=""}
+  else if((c=='\n'||c=='\r')&&!q){if(c=='\r'&&n=='\n')i++;row.push(field);field="";if(row.some(x=>x!==""))rows.push(row);row=[]}
+  else field+=c;
+ }
+ if(field||row.length){row.push(field);rows.push(row)}
+ if(!rows.length)return[];
+ const head=rows[0].map(x=>x.trim());
+ return rows.slice(1).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]??"").trim()])));
+}
+async function fetchFirst(urls){
+ let lastErr;
+ for(const u of urls){
+  try{
+   const r=await fetch(u,{cache:"no-store"});
+   if(!r.ok)throw new Error("HTTP "+r.status);
+   const t=await r.text();
+   if(t.length<1000)throw new Error("Feed too small");
+   return {text:t,url:u};
+  }catch(e){lastErr=e}
+ }
+ throw lastErr||new Error("No data source available");
+}
+function normalizeTeam(t){return t==="JAX"?"JAC":t==="LAR"?"LAR":t}
+function makeKickoff(gameday,gametime){
+ if(!gameday)return null;
+ const time=(gametime&&gametime.includes(":"))?gametime:"13:00";
+ // nflverse gametime is Eastern. Use US DST rule as a direct-feed fallback.
+ // Production path prefers Apps Script kickoffIso, which is timezone-aware.
+ const [y,m,d]=gameday.split("-").map(Number);
+ const [hh,mm]=time.split(":").map(Number);
+ function nthSunday(year,monthIndex,n){
+   const first=new Date(Date.UTC(year,monthIndex,1));
+   const offset=(7-first.getUTCDay())%7;
+   return 1+offset+7*(n-1);
+ }
+ const dstStartDay=nthSunday(y,2,2); // second Sunday March
+ const dstEndDay=nthSunday(y,10,1); // first Sunday November
+ const dateNum=Date.UTC(y,m-1,d,hh,mm);
+ const dstStart=Date.UTC(y,2,dstStartDay,2,0);
+ const dstEnd=Date.UTC(y,10,dstEndDay,2,0);
+ const offset=(dateNum>=dstStart&&dateNum<dstEnd)?"-04:00":"-05:00";
+ return gameday+"T"+time+":00"+offset;
+}
+function teamNickname(abbr){
+ const full=TEAM_NAMES[abbr]||TEAM_NAMES[abbr==="LAR"?"LA":abbr]||abbr;
+ return full.split(" ").slice(-1)[0];
+}
+
+async function loadSharedScheduleFromBackend(){
+ try{
+   const j=await apiGet("getSchedule");
+   const rows=(j&&j.games)||[];
+   if(!rows.length)return false;
+   const byWeek={};
+   rows.forEach(r=>{
+     const wk=String(Number(r.week));
+     if(!wk||Number(wk)<1||Number(wk)>18)return;
+     const away=normalizeTeam(String(r.away||"").toUpperCase());
+     const home=normalizeTeam(String(r.home||"").toUpperCase());
+     const g={
+       id:String(r.gameId||`${wk}_${away}_${home}`),
+       gameId:String(r.gameId||`${wk}_${away}_${home}`),
+       away,awayName:teamNickname(away),
+       home,homeName:teamNickname(home),
+       kickoff:String(r.kickoffIso||""),
+       label:[r.weekday?String(r.weekday).slice(0,3):"",r.gameday||"",r.gametimeET?`${r.gametimeET} ET`:""].filter(Boolean).join(" • "),
+       awayScore:(r.awayScore===null||r.awayScore==="")?null:Number(r.awayScore),
+       homeScore:(r.homeScore===null||r.homeScore==="")?null:Number(r.homeScore),
+       spread:(r.spread===null||r.spread==="")?null:Number(r.spread),
+       totalLine:(r.totalLine===null||r.totalLine==="")?null:Number(r.totalLine)
+     };
+     byWeek[wk]=byWeek[wk]||[];
+     byWeek[wk].push(g);
+   });
+   if(Object.keys(byWeek).length<18)return false;
+   Object.keys(byWeek).forEach(w=>byWeek[w].sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff)));
+   weeks=byWeek;
+   localStorage.setItem(KEYS.weeks,JSON.stringify(weeks));
+   localStorage.setItem(DATA_KEYS.scheduleUpdated,new Date().toISOString());
+
+   // Pull server results so every device grades from the same shared source.
+   for(let wk=1;wk<=18;wk++){
+     try{
+       const rr=await apiGet("getResults",{week:wk});
+       const key="week_"+wk;results[key]=results[key]||{};
+       const games=weeks[String(wk)]||weeks[wk]||[];
+       (rr.results||[]).forEach(row=>{
+         const idx=games.findIndex(g=>String(g.id||g.gameId)===String(row.gameId));
+         if(idx>=0&&row.winner)results[key][idx]=String(row.winner).toUpperCase();
+       });
+     }catch(e){}
+   }
+   localStorage.setItem(KEYS.results,JSON.stringify(results));
+   return true;
+ }catch(e){
+   console.warn("Shared schedule load failed",e);
+   return false;
+ }
+}
+
+async function loadSharedRostersFromBackend(team="",search=""){
+ try{
+   const j=await apiGet("getRosters",{team,search});
+   const rows=(j&&j.players)||[];
+   return rows.map(r=>({
+     team:String(r.team||"").toUpperCase(),
+     name:String(r.name||""),
+     position:String(r.position||""),
+     jersey:String(r.jersey||""),
+     status:String(r.status||""),
+     college:String(r.college||"")
+   }));
+ }catch(e){
+   console.warn("Shared roster load failed",e);
+   return [];
+ }
+}
+
+async function renderRosterFromBackend(){
+ const box=document.getElementById("rosterList"),count=document.getElementById("rosterCount"),sel=document.getElementById("teamSelect");
+ if(!box||!sel)return;
+ const team=sel.value;
+ const q=(document.getElementById("playerSearch")?.value||"").trim();
+ box.innerHTML='<div class="notice" style="grid-column:1/-1">Loading current NFL roster…</div>';
+
+ let rows=await loadSharedRostersFromBackend(team,q);
+ if(!rows.length && rosterData.length){
+   rows=rosterData.filter(x=>x.team===team || (team==="LAR"&&x.team==="LA"));
+   if(q)rows=rows.filter(x=>`${x.name} ${x.position} ${x.status} ${x.college}`.toLowerCase().includes(q.toLowerCase()));
+ }
+ rows.sort((a,b)=>(a.position||"").localeCompare(b.position||"")||(Number(a.jersey)||999)-(Number(b.jersey)||999));
+ count.textContent=`${TEAM_NAMES[team]||team}: ${rows.length} matching roster entries`;
+ box.innerHTML=rows.length?rows.map(p=>`<div class="player-row"><div class="jersey">${esc(p.jersey||"—")}</div><div><b>${esc(p.name)}</b><div class="player-meta">${esc(p.position||"Position —")}${p.college?" • "+esc(p.college):""}</div></div><span class="pill">${esc(p.status||"Roster")}</span></div>`).join(""):'<div class="notice" style="grid-column:1/-1">No matching player found. If this is unexpected, Admin can refresh the shared NFL data.</div>';
+}
+
+async function loadFullSchedule(){
+ const {text}=await fetchFirst(NFL_SCHEDULE_URLS);
+ const rows=parseCSV(text).filter(r=>String(r.season)==="2026"&&r.game_type==="REG");
+ const byWeek={};
+ rows.forEach(r=>{
+  const wk=String(Number(r.week));if(!wk||Number(wk)<1||Number(wk)>18)return;
+  const away=normalizeTeam(r.away_team),home=normalizeTeam(r.home_team);
+  const g={
+    id:r.game_id||`${wk}_${away}_${home}`,
+    away,awayName:teamNickname(away),home,homeName:teamNickname(home),
+    kickoff:makeKickoff(r.gameday,r.gametime),
+    label:[r.weekday?String(r.weekday).slice(0,3):"",r.gameday||"",r.gametime?`${r.gametime} ET`:""].filter(Boolean).join(" • "),
+    awayScore:r.away_score===""?null:Number(r.away_score),
+    homeScore:r.home_score===""?null:Number(r.home_score),
+    spread:r.spread_line===""?null:Number(r.spread_line),
+    totalLine:r.total_line===""?null:Number(r.total_line)
+  };
+  byWeek[wk]=byWeek[wk]||[];byWeek[wk].push(g);
+ });
+ for(const wk of Object.keys(byWeek))byWeek[wk].sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+ if(Object.keys(byWeek).length<18)throw new Error("Schedule feed did not contain all 18 weeks");
+ weeks=byWeek;localStorage.setItem(KEYS.weeks,JSON.stringify(weeks));
+ localStorage.setItem(DATA_KEYS.scheduleUpdated,new Date().toISOString());
+ // Grade completed games automatically.
+ for(const [wk,gs] of Object.entries(weeks)){
+  const key="week_"+wk;results[key]=results[key]||{};
+  gs.forEach((g,i)=>{
+   if(Number.isFinite(g.awayScore)&&Number.isFinite(g.homeScore)&&g.awayScore!==g.homeScore){
+    results[key][i]=g.awayScore>g.homeScore?g.away:g.home;
+   }
+  });
+ }
+ localStorage.setItem(KEYS.results,JSON.stringify(results));
+}
+async function loadRosters(){
+ const {text}=await fetchFirst(NFL_ROSTER_URLS);
+ let rows=parseCSV(text);
+ rows=rows.filter(r=>!r.season||String(r.season)==="2026");
+ rosterData=rows.map(r=>({
+   team:normalizeTeam(r.team||r.team_abbr||r["team.abbr"]||""),
+   name:r.full_name||r.player_name||r.player||r["teamPlayers.displayName"]||r.name||"",
+   position:r.position||r.pos||r["teamPlayers.position"]||"",
+   jersey:r.jersey_number||r.jersey||r.no||r["teamPlayers.jerseyNumber"]||"",
+   status:r.status||r.roster_status||r["teamPlayers.status"]||"",
+   college:r.college||r.college_name||r["teamPlayers.collegeName"]||""
+ })).filter(x=>x.team&&x.name);
+ if(!rosterData.length)throw new Error("Roster feed returned no 2026 players");
+ localStorage.setItem(DATA_KEYS.rosters,JSON.stringify(rosterData));
+ localStorage.setItem(DATA_KEYS.rostersUpdated,new Date().toISOString());
+ populateQBChoices();
+}
+async function refreshNFLData(force){
+ const sUpdated=localStorage.getItem(DATA_KEYS.scheduleUpdated);
+ const rUpdated=localStorage.getItem(DATA_KEYS.rostersUpdated);
+ const stale=(iso,hours)=>!iso||(Date.now()-new Date(iso).getTime())>hours*3600000;
+ const needS=force||stale(sUpdated,6)||Object.keys(weeks).length<18;
+ const needR=force||stale(rUpdated,24)||!rosterData.length;
+ let scheduleOK=!needS,rosterOK=!needR;
+
+ if(needS){
+   scheduleOK=await loadSharedScheduleFromBackend();
+   if(!scheduleOK){try{await loadFullSchedule();scheduleOK=true}catch(e){console.warn("Schedule refresh failed",e)}}
+ }
+ if(needR){
+   try{
+     const shared=await loadSharedRostersFromBackend();
+     if(shared.length){
+       rosterData=shared;
+       localStorage.setItem(DATA_KEYS.rosters,JSON.stringify(rosterData));
+       localStorage.setItem(DATA_KEYS.rostersUpdated,new Date().toISOString());
+       populateQBChoices();
+       rosterOK=true;
+     }else{
+       await loadRosters();rosterOK=true;
+     }
+   }catch(e){console.warn("Roster refresh failed",e)}
+ }
+
+ updateDataStatus(scheduleOK,rosterOK);
+ loadWeek();renderStandings();renderSeasonStandings();renderPlayerScoreboard();
+ renderRosterFromBackend();
+ if(force)toast(scheduleOK&&rosterOK?"Shared NFL schedule, scores and rosters refreshed":"Used cached data where a live feed was unavailable");
+}
+function updateDataStatus(scheduleOK,rosterOK){
+ const su=localStorage.getItem(DATA_KEYS.scheduleUpdated),ru=localStorage.getItem(DATA_KEYS.rostersUpdated);
+ const schedText=document.getElementById("scheduleSyncStatus");
+ if(schedText)schedText.textContent=scheduleOK?`18 weeks available • Last refresh ${su?new Date(su).toLocaleString():"cached"}`:"Live feed unavailable — cached schedule retained";
+ const rosText=document.getElementById("rosterSyncStatus");
+ if(rosText)rosText.textContent=rosterOK?`${new Set(rosterData.map(x=>x.team)).size} teams loaded • ${rosterData.length} roster rows`:"Live roster feed unavailable — cached roster retained";
+ const rs=document.getElementById("rosterStatus"),rd=document.getElementById("rosterDot"),ruEl=document.getElementById("rosterUpdated");
+ if(rs)rs.textContent=rosterData.length?`${new Set(rosterData.map(x=>x.team)).size} teams • ${rosterData.length} players/roster rows`:"Roster data unavailable";
+ if(rd)rd.className="dot"+(rosterData.length?"":" warn");
+ if(ruEl)ruEl.textContent="Last update: "+(ru?new Date(ru).toLocaleString():"—");
+}
+function setupTeamSelect(){
+ const s=document.getElementById("teamSelect");if(!s)return;
+ s.innerHTML="";
+ const teams=Object.entries(TEAM_NAMES).filter(([a])=>!["JAX","LA"].includes(a)).sort((a,b)=>a[1].localeCompare(b[1]));
+ teams.forEach(([abbr,name])=>{const o=document.createElement("option");o.value=abbr;o.textContent=name;s.appendChild(o)});
+ s.value="NE";
+}
+function renderRoster(){
+ const box=document.getElementById("rosterList"),count=document.getElementById("rosterCount"),sel=document.getElementById("teamSelect");
+ if(!box||!sel)return;
+ const team=sel.value,q=(document.getElementById("playerSearch")?.value||"").trim().toLowerCase();
+ let rows=rosterData.filter(x=>x.team===team || (team==="LAR"&&x.team==="LA"));
+ if(q)rows=rows.filter(x=>`${x.name} ${x.position} ${x.status}`.toLowerCase().includes(q));
+ rows.sort((a,b)=>(a.position||"").localeCompare(b.position||"")||(Number(a.jersey)||999)-(Number(b.jersey)||999));
+ count.textContent=`${TEAM_NAMES[team]||team}: ${rows.length} matching roster entries`;
+ box.innerHTML=rows.length?rows.map(p=>`<div class="player-row"><div class="jersey">${esc(p.jersey||"—")}</div><div><b>${esc(p.name)}</b><div class="player-meta">${esc(p.position||"Position —")}${p.college?" • "+esc(p.college):""}</div></div><span class="pill">${esc(p.status||"Roster")}</span></div>`).join(""):'<div class="notice" style="grid-column:1/-1">Roster data has not loaded yet. Tap “Refresh NFL Data.”</div>';
+}
+
+function getWeek(){return weeks[selectedWeek]||[]}
+function pickKey(){return "week_"+selectedWeek}
+function loadWeek(){
+  picks=(JSON.parse(localStorage.getItem(KEYS.picks)||"{}")[pickKey()]||{});
+  document.getElementById("weekTitle").textContent="NFL Week "+selectedWeek;
+  const tw=document.getElementById("talkWeek");if(tw)tw.textContent=selectedWeek;
+  document.getElementById("printWeek").textContent="NFL WEEK "+selectedWeek+" PICK'EM";
+  renderGames();renderPrint();renderAdmin();updateProgress();
+}
+function renderGames(){
+ const box=document.getElementById("games");box.innerHTML="";
+ const games=getWeek();
+ if(!games.length){box.innerHTML='<div class="card" style="grid-column:1/-1"><b>Week '+selectedWeek+' schedule has not been loaded yet.</b><p class="small">Admin → Weekly Setup will tell you exactly what is missing.</p></div>';return}
+ games.forEach((g,i)=>{
+  const locked=Date.now()>=new Date(g.kickoff).getTime();
+  const div=document.createElement("div");div.className="game"+(locked?" locked":"");
+  div.innerHTML=`<div class="gamemeta"><span>Game ${i+1}</span><span>${g.label||formatKickoff(g.kickoff)} ${locked?"• LOCKED":""}</span></div>
+  <div class="teams">
+   <button class="team ${picks[i]===g.away?"selected":""}" ${locked?"disabled":""} onclick="choose(${i},'${g.away}')"><span class="abbr">${g.away}</span><small>${g.awayName}</small></button>
+   <div class="at">@</div>
+   <button class="team ${picks[i]===g.home?"selected":""}" ${locked?"disabled":""} onclick="choose(${i},'${g.home}')"><span class="abbr">${g.home}</span><small>${g.homeName}</small></button>
+  </div>`;
+  box.appendChild(div)
+ })
+}
+function formatKickoff(v){return new Date(v).toLocaleString([], {weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}
+function choose(i,t){picks[i]=t;persistPickMap();renderGames();updateProgress()}
+function persistPickMap(){let all=JSON.parse(localStorage.getItem(KEYS.picks)||"{}");all[pickKey()]=picks;localStorage.setItem(KEYS.picks,JSON.stringify(all))}
+function updateProgress(){
+ const total=getWeek().length,count=Object.keys(picks).length,pct=total?count/total*100:0;
+ document.getElementById("pickProgress").style.width=pct+"%";document.getElementById("pickCount").textContent=`${count} of ${total} picks made`;
+ document.getElementById("heroGames").textContent=total;document.getElementById("heroPicked").textContent=count;
+ document.getElementById("playerNotice").className="notice"+(document.getElementById("playerName").value.trim()?" good":"");
+ document.getElementById("playerNotice").textContent=document.getElementById("playerName").value.trim()?"Your name is set. Finish every pick and submit.":"Enter your name below before submitting your picks.";
+ updateScoreHero();
+}
+
+function shareMyPicks(){
+ const games=getWeek();
+ if(!games.length)return toast("This week's schedule is not loaded yet");
+ const name=document.getElementById("playerName").value.trim()||"My";
+ const tb=document.getElementById("tiebreaker").value;
+ let lines=[`🏈 AGS FOOTBALL POOL — WEEK ${selectedWeek}`,`${name} Picks:`];
+ games.forEach((g,i)=>{
+   const p=picks[i];
+   if(p){
+     const chosen = p===g.away ? `${g.away} ${g.awayName}` : `${g.home} ${g.homeName}`;
+     lines.push(`${i+1}. ${chosen}`);
+   }
+ });
+ if(tb!=="")lines.push(`Tiebreaker: ${tb} total points`);
+ lines.push("Any Given Sunday • Pick • Track • Brag");
+ const text=lines.join("\n");
+ if(navigator.share){
+   navigator.share({title:`AGS Football Pool — Week ${selectedWeek}`,text}).catch(()=>{});
+ }else if(navigator.clipboard){
+   navigator.clipboard.writeText(text).then(()=>toast("Your picks were copied for the group chat"));
+ }else{
+   window.prompt("Copy your picks:",text);
+ }
+}
+
+function saveDraft(){
+ localStorage.setItem("sgf_name",document.getElementById("playerName").value.trim());
+ localStorage.setItem("sgf_pool",document.getElementById("poolName").value.trim());
+ persistPickMap();toast("Draft saved on this device");
+}
+function submitPicks(){
+ const games=getWeek(),name=document.getElementById("playerName").value.trim(),tb=document.getElementById("tiebreaker").value;
+ if(!name)return toast("Enter your name first");
+ if(Object.keys(picks).length<games.length)return toast(`Make all ${games.length} picks first`);
+ if(tb==="")return toast("Enter your tiebreaker score");
+ saveDraft();
+ let entries=JSON.parse(localStorage.getItem(KEYS.entries)||"[]");
+ const entry={id:Date.now(),week:selectedWeek,name,pool:document.getElementById("poolName").value.trim(),picks:{...picks},tiebreaker:Number(tb),submitted:new Date().toISOString()};
+ entries=entries.filter(e=>!(e.week===selectedWeek&&e.name.toLowerCase()===name.toLowerCase()));entries.push(entry);
+ localStorage.setItem(KEYS.entries,JSON.stringify(entries));
+ if(settings.scriptUrl)postToScript({action:"submitPicks",entry}).catch(()=>{});
+ renderStandings();renderSeasonStandings();renderPlayerScoreboard();toast("Picks submitted — good luck!");
+}
+function scoreEntry(e){
+ const r=results["week_"+e.week]||{},games=weeks[e.week]||[];let completed=0,correct=0;
+ games.forEach((g,i)=>{if(r[i]){completed++;if(e.picks[i]===r[i])correct++}});
+ return {completed,correct,pct:completed?correct/completed*100:0,record:`${correct}-${Math.max(0,completed-correct)}`}
+}
+
+function ordinal(n){
+ if(!n)return "—";
+ const s=["th","st","nd","rd"],v=n%100;
+ return n+(s[(v-20)%10]||s[v]||s[0]);
+}
+function getWeeklyRankings(week=selectedWeek){
+ const key="week_"+week;
+ const all=JSON.parse(localStorage.getItem(KEYS.entries)||"[]").filter(e=>Number(e.week)===Number(week));
+ const scored=all.map(e=>({...e,s:scoreEntry(e)}));
+ scored.sort((a,b)=>b.s.pct-a.s.pct||b.s.correct-a.s.correct||Math.abs((a.tiebreaker||0)-50)-Math.abs((b.tiebreaker||0)-50));
+ return scored;
+}
+function renderPlayerScoreboard(){
+ const games=getWeek();
+ const key="week_"+selectedWeek;
+ const completed=games.filter((g,i)=>results[key]&&results[key][i]).length;
+ const left=Math.max(0,games.length-completed);
+
+ const name=(document.getElementById("playerName")?.value||"").trim();
+ const rankings=getWeeklyRankings(selectedWeek);
+ const mine=rankings.find(e=>e.name.trim().toLowerCase()===name.toLowerCase());
+ const myScore=mine?mine.s:{correct:0,completed:completed,pct:0};
+ const wrong=Math.max(0,(myScore.completed||0)-(myScore.correct||0));
+
+ const pct=document.getElementById("myScorePct");
+ const cor=document.getElementById("myCorrect");
+ const wr=document.getElementById("myWrong");
+ const rk=document.getElementById("myRank");
+ const gl=document.getElementById("gamesLeft");
+ const weekLabel=document.getElementById("scoreWeekLabel");
+ const status=document.getElementById("scoreStatusPill");
+
+ if(weekLabel)weekLabel.textContent=`Week ${selectedWeek} Scoreboard`;
+ if(pct)pct.textContent=myScore.completed?myScore.pct.toFixed(1)+"%":"—";
+ if(cor)cor.textContent=myScore.correct||0;
+ if(wr)wr.textContent=wrong;
+ if(rk){
+   const idx=mine?rankings.indexOf(mine)+1:0;
+   rk.textContent=idx?ordinal(idx):"—";
+ }
+ if(gl)gl.textContent=left;
+ if(status)status.textContent=completed===0?"Pre-game":left===0?"Final":"Live";
+
+ const leaderLine=document.getElementById("liveLeaderLine");
+ if(leaderLine){
+  if(rankings.length&&rankings[0].s.completed){
+    leaderLine.innerHTML=`Current leader: <span class="live-leader">${esc(rankings[0].name)} — ${rankings[0].s.pct.toFixed(1)}%</span>`;
+  }else{
+    leaderLine.innerHTML='Current leader: <span class="live-leader">Waiting for completed games</span>';
+  }
+ }
+
+ const banner=document.getElementById("weeklyWinnerBanner");
+ if(banner){
+   const winner=rankings[0];
+   if(left===0&&completed>0&&winner){
+     banner.classList.add("show");
+     document.getElementById("weeklyWinnerName").textContent=winner.name;
+     document.getElementById("weeklyWinnerDetail").textContent=`${winner.s.correct} correct out of ${winner.s.completed} completed games — ${winner.s.pct.toFixed(1)}%`;
+   }else{
+     banner.classList.remove("show");
+   }
+ }
+}
+
+function renderStandings(){
+ let entries=JSON.parse(localStorage.getItem(KEYS.entries)||"[]").filter(e=>e.week===selectedWeek);
+ entries=entries.map(e=>({...e,s:scoreEntry(e)})).sort((a,b)=>b.s.pct-a.s.pct || b.s.correct-a.s.correct || Math.abs(a.tiebreaker-50)-Math.abs(b.tiebreaker-50));
+ const body=document.getElementById("leaderRows");body.innerHTML="";
+ if(!entries.length){body.innerHTML='<tr><td colspan="6">No submitted entries yet for this week.</td></tr>';return}
+ entries.forEach((e,i)=>{body.innerHTML+=`<tr><td class="rank">${i+1}</td><td><b>${esc(e.name)}</b></td><td>${e.s.correct}</td><td>${e.s.record}</td><td>${e.s.completed?e.s.pct.toFixed(1)+"%":"—"}</td><td>${e.tiebreaker}</td></tr>`})
+}
+
+function renderSeasonStandings(){
+ const body=document.getElementById("seasonLeaderRows");if(!body)return;
+ const entries=JSON.parse(localStorage.getItem(KEYS.entries)||"[]");
+ const agg={};
+ entries.forEach(e=>{
+   const s=scoreEntry(e);const k=e.name.trim().toLowerCase();
+   agg[k]=agg[k]||{name:e.name,correct:0,completed:0};
+   agg[k].correct+=s.correct;agg[k].completed+=s.completed;
+ });
+ const rows=Object.values(agg).map(x=>({...x,pct:x.completed?x.correct/x.completed*100:0}))
+   .sort((a,b)=>b.pct-a.pct||b.correct-a.correct);
+ body.innerHTML=rows.length?rows.map((x,i)=>`<tr><td class="rank">${i+1}</td><td><b>${esc(x.name)}</b></td><td>${x.correct}</td><td>${x.completed}</td><td>${x.completed?x.pct.toFixed(1)+"%":"—"}</td></tr>`).join(""):'<tr><td colspan="5">No completed games have been scored yet.</td></tr>';
+}
+
+function updateScoreHero(){
+ const name=document.getElementById("playerName").value.trim().toLowerCase();
+ const entries=JSON.parse(localStorage.getItem(KEYS.entries)||"[]");const e=entries.find(x=>x.week===selectedWeek&&x.name.toLowerCase()===name);
+ if(!e){document.getElementById("heroScore").textContent="—";document.getElementById("heroPct").textContent="—";return}
+ const s=scoreEntry(e);document.getElementById("heroScore").textContent=s.completed?s.record:"—";document.getElementById("heroPct").textContent=s.completed?s.pct.toFixed(1)+"%":"—";
+}
+document.getElementById("playerName").addEventListener("input",updateProgress);
+
+function renderPrint(){
+ const p=document.getElementById("printGames");p.innerHTML="";
+ getWeek().forEach((g,i)=>p.innerHTML+=`<div class="print-game"><b>Game ${i+1}</b> — ${g.label||formatKickoff(g.kickoff)}
+ <div class="print-line"><span>☐ ${g.away} ${g.awayName}</span><span>AWAY</span></div>
+ <div class="print-line"><span>☐ ${g.home} ${g.homeName}</span><span>HOME</span></div></div>`)
+}
+
+function chooseN(n,k){
+ if(k<0||k>n)return 0;k=Math.min(k,n-k);let r=1;
+ for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return r;
+}
+function pct(v){
+ if(v===0)return "0%";
+ if(v<0.000001)return (v*100).toExponential(2)+"%";
+ return (v*100).toFixed(v<0.01?4:2)+"%";
+}
+function renderChanceLab(){
+ const p=Math.max(1,Number(document.getElementById("chancePlayers")?.value)||30);
+ const n=Math.max(1,Math.min(25,Number(document.getElementById("chanceGames")?.value)||10));
+ const perfect=1/Math.pow(2,n),group=1-Math.pow(1-perfect,p);
+ const op=document.getElementById("onePerfect"),gp=document.getElementById("groupPerfect"),cc=document.getElementById("comboCount");
+ if(op)op.textContent=pct(perfect);if(gp)gp.textContent=pct(group);if(cc)cc.textContent=Math.pow(2,n).toLocaleString();
+ const rows=document.getElementById("chanceRows");if(!rows)return;
+ let s="";
+ for(let k=n;k>=0;k--){
+  const pr=chooseN(n,k)/Math.pow(2,n);const odds=pr?Math.round(1/pr):0;
+  s+=`<tr><td><b>${k} of ${n}</b></td><td>${pct(pr)}</td><td>${odds?`about 1 in ${odds.toLocaleString()}`:"—"}</td></tr>`;
+ }
+ rows.innerHTML=s;
+}
+
+function unlockAdmin(){
+ if(document.getElementById("adminCode").value!==(settings.adminCode||"239367SG"))return toast("Admin code not recognized");
+ document.getElementById("adminPanel").classList.add("show");document.getElementById("adminLock").style.display="none";renderAdmin();renderChanceLab()
+}
+function renderAdmin(){
+ const games=getWeek(),r=results["week_"+selectedWeek]||{},entries=JSON.parse(localStorage.getItem(KEYS.entries)||"[]").filter(e=>e.week===selectedWeek);
+ const checks=[
+  {ok:games.length>0,text:"Schedule loaded",detail:games.length?`${games.length} games are loaded for Week ${selectedWeek}. ${Object.keys(weeks).length>=18?"Full 18-week season is available.":"Full season feed still refreshing."}`:"No games are loaded for this week."},
+  {ok:games.length>0&&games.every(g=>g.kickoff),text:"Kickoff times loaded",detail:"Required for automatic pick locking."},
+  {ok:!!settings.scriptUrl,text:"Google Sheets connection",detail:settings.scriptUrl?"Apps Script URL saved.":"Optional for demo; required for a shared live pool."},
+  {ok:entries.length>0,text:"Player entries received",detail:`${entries.length} submitted entr${entries.length===1?"y":"ies"} on this device.`},
+  {ok:games.length>0&&Object.keys(r).length===games.length,text:"Final winners entered",detail:`${Object.keys(r).length} of ${games.length} results entered.`}
+ ];
+ const box=document.getElementById("weeklyChecklist");box.innerHTML=checks.map(c=>`<div class="check ${c.ok?"":"warn"}"><div class="checkmark">${c.ok?"✓":"!"}</div><div><b>${c.text}</b><div class="small">${c.detail}</div></div><span class="pill">${c.ok?"Ready":"Needs attention"}</span></div>`).join("");
+ document.getElementById("readyPill").textContent=checks.slice(0,2).every(c=>c.ok)?"✅ Week can open":"⚠️ Setup needed";
+ renderResultsEditor();
+}
+function renderResultsEditor(){
+ const box=document.getElementById("resultsEditor"); if(!box)return;box.innerHTML="";const r=results["week_"+selectedWeek]||{};
+ getWeek().forEach((g,i)=>{
+  const d=document.createElement("div");d.className="game";d.innerHTML=`<div class="gamemeta"><span>Game ${i+1}</span><span>${g.away} @ ${g.home}</span></div>
+  <div class="teams"><button class="team ${r[i]===g.away?"selected":""}" onclick="setWinner(${i},'${g.away}')"><span class="abbr">${g.away}</span><small>${g.awayName}</small></button>
+  <div class="at">WINNER</div><button class="team ${r[i]===g.home?"selected":""}" onclick="setWinner(${i},'${g.home}')"><span class="abbr">${g.home}</span><small>${g.homeName}</small></button></div>`;box.appendChild(d)
+ })
+}
+function setWinner(i,t){let k="week_"+selectedWeek;results[k]=results[k]||{};results[k][i]=t;localStorage.setItem(KEYS.results,JSON.stringify(results));renderResultsEditor();renderStandings();renderSeasonStandings();renderPlayerScoreboard();renderAdmin();updateScoreHero();toast("Result saved")}
+function saveSettings(){
+ settings.scriptUrl=document.getElementById("scriptUrl").value.trim();localStorage.setItem(KEYS.settings,JSON.stringify(settings));renderAdmin();toast("Settings saved")
+}
+async function testConnection(){
+ const url=document.getElementById("scriptUrl").value.trim();if(!url)return toast("Paste your Apps Script URL first");
+ try{await fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"ping",app:"AGS Football Pool"})});toast("Connection request sent")}catch(e){toast("Connection test failed")}
+}
+async function postToScript(data){return fetch(settings.scriptUrl,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(data)})}
+function importSchedule(){
+ try{
+  const arr=JSON.parse(document.getElementById("scheduleJson").value);if(!Array.isArray(arr)||!arr.length)throw 0;
+  weeks[selectedWeek]=arr;localStorage.setItem(KEYS.weeks,JSON.stringify(weeks));loadWeek();toast(`Week ${selectedWeek} schedule imported`)
+ }catch(e){toast("Schedule JSON is not valid")}
+}
+
+
+function getPlayerNameForExport(){
+ return (document.getElementById("playerName")?.value||"Player").trim() || "Player";
+}
+function getWeekExportData(){
+ const games=getWeek();
+ const key="week_"+selectedWeek;
+ const name=getPlayerNameForExport();
+ const rankings=getWeeklyRankings(selectedWeek);
+ const mine=rankings.find(e=>String(e.name||e.displayName||"").trim().toLowerCase()===name.toLowerCase());
+ const score=mine?mine.s:null;
+ return {games,key,name,score};
+}
+function downloadTextFile(filename,text,type="text/plain"){
+ const blob=new Blob([text],{type});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function downloadWeeklyPicks(){
+ const {games,key,name,score}=getWeekExportData();
+ const picksMap={};
+ try{
+   const entries=JSON.parse(localStorage.getItem(KEYS.entries)||"[]");
+   const latest=entries.filter(e=>Number(e.week)===Number(selectedWeek)&&String(e.name||"").trim().toLowerCase()===name.toLowerCase()).slice(-1)[0];
+   if(latest&&latest.picks)Object.assign(picksMap,latest.picks);
+ }catch(e){}
+ let lines=[`AGS FOOTBALL POOL — WEEK ${selectedWeek}`,`PLAYER: ${name}`,""];
+ games.forEach((g,i)=>{
+   const pick=picksMap[i]||picksMap[g.gameId]||"Not picked";
+   const result=(results[key]&&results[key][i])||"Pending";
+   lines.push(`${i+1}. ${g.away} @ ${g.home} | Pick: ${pick} | Result: ${result}`);
+ });
+ if(score){
+   lines.push("",`SCORE: ${score.correct}/${score.completed} — ${score.pct.toFixed(1)}%`);
+ }
+ lines.push("","Any Given Sunday • Pick • Track • Brag");
+ downloadTextFile(`AGS-Week-${selectedWeek}-${name.replace(/[^a-z0-9]+/gi,"-")}.txt`,lines.join("\n"));
+ toast("Weekly picks downloaded");
+}
+function saveWeeklySnapshot(){
+ const name=getPlayerNameForExport();
+ const card=document.getElementById("playerScoreCard");
+ if(!card)return toast("Scorecard not available");
+ const css=Array.from(document.styleSheets).map(s=>{
+   try{return Array.from(s.cssRules||[]).map(r=>r.cssText).join("\n")}catch(e){return ""}
+ }).join("\n");
+ const doc=`<!doctype html><html><head><meta charset="utf-8"><title>AGS Week ${selectedWeek} — ${esc(name)}</title><style>body{font-family:Arial,sans-serif;background:#071522;color:#fff;padding:20px;max-width:900px;margin:auto}${css}</style></head><body><h1>AGS Football Pool</h1><h2>Week ${selectedWeek} — ${esc(name)}</h2>${card.outerHTML}<p>Saved ${new Date().toLocaleString()}</p></body></html>`;
+ downloadTextFile(`AGS-Scorecard-Week-${selectedWeek}-${name.replace(/[^a-z0-9]+/gi,"-")}.html`,doc,"text/html");
+ toast("Scorecard saved to your computer");
+}
+
+function kickFieldGoal(choice){
+ const defense=["L","M","R"][Math.floor(Math.random()*3)];
+ let streak=Number(localStorage.getItem("ags_fg_streak")||0);
+ let best=Number(localStorage.getItem("ags_fg_best")||0);
+ const good=choice!==defense;
+ const box=document.getElementById("fgResult");
+ if(good){streak++;best=Math.max(best,streak);if(box){box.className="notice good";box.textContent=`GOOD! Defense guessed ${defense==="L"?"left":defense==="M"?"middle":"right"}. You found the opening.`}}
+ else{streak=0;if(box){box.className="notice";box.textContent=`BLOCKED! Defense guessed the same lane. Streak reset.`}}
+ localStorage.setItem("ags_fg_streak",streak);localStorage.setItem("ags_fg_best",best);
+ document.getElementById("fgStreak").textContent=streak;document.getElementById("fgBest").textContent=best;
+}
+function quickPickChallenge(){
+ const games=getWeek(),box=document.getElementById("quickPickBox");if(!games.length)return;
+ const g=games[Math.floor(Math.random()*games.length)];
+ box.innerHTML=`<b>${esc(g.away)} ${esc(g.awayName)} @ ${esc(g.home)} ${esc(g.homeName)}</b><div class="actionrow" style="margin-top:8px"><button class="secondary" onclick="this.parentElement.parentElement.innerHTML='You chose <b>${esc(g.away)} ${esc(g.awayName)}</b> on instinct.'">${esc(g.away)}</button><button class="secondary" onclick="this.parentElement.parentElement.innerHTML='You chose <b>${esc(g.home)} ${esc(g.homeName)}</b> on instinct.'">${esc(g.home)}</button></div>`;
+}
+function footballTalk(){
+ const qs=[
+  "Which team has the best chance to surprise everybody this season?",
+  "Who is your favorite quarterback right now?",
+  "Which defense would you trust with the game on the line?",
+  "What team do you never feel comfortable picking against?",
+  "Who will have the biggest breakout season?",
+  "What is the toughest stadium for a visiting team?",
+  "If you could add one player to your favorite team, who would it be?",
+  "Which division will be the hardest this season?",
+  "Who is your early MVP pick?",
+  "Which game this week are you most excited to watch?"
+ ];
+ document.getElementById("talkQuestion").textContent=qs[Math.floor(Math.random()*qs.length)];
+}
+
+
+async function syncLatestPicksToBackend(){
+ try{
+  const nm=(document.getElementById("playerName")?.value||"").trim();
+  if(!nm)return;
+  const wk=selectedWeek;
+  const gameList=getWeek();
+  const apiPicks={};
+  // Read currently selected choices from rendered matchup buttons/radios.
+  gameList.forEach((g,i)=>{
+    let v="";
+    const checked=document.querySelector(`input[name="pick_${i}"]:checked`);
+    if(checked)v=checked.value;
+    if(!v && typeof currentPicks!=="undefined" && currentPicks && currentPicks[i])v=currentPicks[i];
+    if(!v && typeof picks!=="undefined" && picks && picks[i])v=picks[i];
+    if(v)apiPicks[g.gameId||g.id||String(i)]=v;
+  });
+  if(Object.keys(apiPicks).length){
+    await apiPost({action:"submitPicks",name:nm,week:wk,picks:apiPicks});
+    await refreshSharedStandings();
+  }
+ }catch(e){
+  console.warn("AGS backend pick sync failed",e);
+ }
+}
+async function refreshSharedStandings(){
+ try{
+   const j=await apiGet("getStandings",{week:selectedWeek});
+   window.agsSharedStandings=j;
+   renderSharedLeaderboard(j);
+   return j;
+ }catch(e){
+   console.warn("AGS standings fetch failed",e);
+   return null;
+ }
+}
+function renderSharedLeaderboard(j){
+ const rows=(j&&j.standings)||[];
+ const leaderLine=document.getElementById("liveLeaderLine");
+ if(leaderLine){
+   if(rows.length){
+     leaderLine.innerHTML=`Current leader: <span class="live-leader">${esc(rows[0].displayName||rows[0].name||"Player")} — ${Number(rows[0].percentage||0).toFixed(1)}%</span>`;
+   }else{
+     leaderLine.innerHTML='Current leader: <span class="live-leader">Waiting for submitted picks</span>';
+   }
+ }
+
+ const fullBody=document.getElementById("leaderRows");
+ if(fullBody && rows.length){
+   fullBody.innerHTML=rows.map(r=>`<tr><td class="rank">${r.rank||"—"}</td><td><b>${esc(r.displayName||r.name||"Player")}</b></td><td>${r.correct||0}</td><td>${r.correct||0}-${r.wrong||0}</td><td>${r.completed?Number(r.percentage||0).toFixed(1)+"%":"—"}</td><td>—</td></tr>`).join("");
+ }
+
+ const nm=(document.getElementById("playerName")?.value||"").trim().toLowerCase();
+ const mine=rows.find(r=>String(r.displayName||r.name||"").trim().toLowerCase()===nm);
+ if(mine){
+   const pct=document.getElementById("myScorePct"),cor=document.getElementById("myCorrect"),
+         wr=document.getElementById("myWrong"),rk=document.getElementById("myRank"),gl=document.getElementById("gamesLeft");
+   if(pct)pct.textContent=Number(mine.percentage||0).toFixed(1)+"%";
+   if(cor)cor.textContent=mine.correct||0;
+   if(wr)wr.textContent=mine.wrong||0;
+   if(rk)rk.textContent=ordinal(mine.rank||0);
+   if(gl)gl.textContent=j.gamesRemaining ?? "—";
+ }
+
+ const banner=document.getElementById("weeklyWinnerBanner");
+ if(banner){
+   if(j.final && rows.length){
+     banner.classList.add("show");
+     document.getElementById("weeklyWinnerName").textContent=rows[0].displayName||rows[0].name||"Winner";
+     document.getElementById("weeklyWinnerDetail").textContent=`${rows[0].correct} correct out of ${rows[0].completed} — ${Number(rows[0].percentage||0).toFixed(1)}%`;
+   }else{
+     banner.classList.remove("show");
+   }
+ }
+}
+async function refreshSharedRoster(team="",search=""){
+ try{
+   const j=await apiGet("getRosters",{team,search});
+   return j.players||[];
+ }catch(e){
+   console.warn("AGS roster fetch failed",e);
+   return [];
+ }
+}
+
+function showTab(id){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ const target=document.getElementById(id);
+ if(!target)return;
+ target.classList.add("active");
+ document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));
+
+ if(id==="picks"){renderPlayerScoreboard();refreshSharedStandings();}
+ if(id==="standings"){renderStandings();renderSeasonStandings();refreshSharedStandings();}
+ if(id==="seasonpicks"){setupSeasonPredictionInputs();renderFavoriteQB();renderMVPWatch()}
+ if(id==="rosters")renderRosterFromBackend();
+ if(id==="admin"){renderAdmin();renderChanceLab()}
+
+ // Let the section become visible before scrolling to it.
+ requestAnimationFrame(()=>{
+   requestAnimationFrame(()=>{
+     target.scrollIntoView({behavior:"smooth",block:"start",inline:"nearest"});
+   });
+ });
+}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2400)}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function applyTheme(){
+ const light=localStorage.getItem("sgf_theme")==="light";document.getElementById("themeBtn").textContent=light?"🌙":"☀️";
+ if(light)document.documentElement.style.filter="invert(.92) hue-rotate(180deg)";
+}
+document.getElementById("themeBtn").onclick=()=>{localStorage.setItem("sgf_theme",localStorage.getItem("sgf_theme")==="light"?"dark":"light");location.reload()}
+init();
+</script>
+</body></html>
